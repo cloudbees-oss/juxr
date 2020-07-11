@@ -178,7 +178,7 @@ jobs:
         run: |
           mkdir -p target
           docker build --tag juxr:build --target build .
-          docker build --tag juxr:latest --tag juxr:${{ github.ref }} .
+          docker build --tag juxr:latest --tag juxr:$( echo ${{ github.ref }} | sed -e 's:refs/tags/::') .
           ID=$(docker run -d juxr:build cat)
           docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
           docker rm --force $ID
@@ -196,7 +196,6 @@ jobs:
         uses: mr-smithers-excellent/docker-build-push@v3
         with:
           image: stephenc/juxr
-          tag: ${{ github.ref }}
           registry: docker.pkg.github.com
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
