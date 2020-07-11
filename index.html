@@ -27,18 +27,8 @@
 <p>To get the toolkit locally just use <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">Cargo</a>:</p>
 <pre><code>cargo install juxr
 </code></pre>
-<p>To get the toolkit for use in Docker containers just copy it from the Docker image:</p>
-<div class="highlight highlight-source-dockerfile"><pre><span class="pl-k">FROM</span> juxr:latest AS juxr
-<span class="pl-c"><span class="pl-c">#</span> Just to grab the juxr binary, then build your image as normal</span>
-
-<span class="pl-k">FROM</span> your-base-image             
-<span class="pl-c"><span class="pl-c">#</span> ...</span>
-
-<span class="pl-c"><span class="pl-c">#</span> Copy in the binary</span>
-<span class="pl-k">COPY</span> --from=juxr /usr/local/bin/juxr /usr/local/bin/juxr
-
-<span class="pl-c"><span class="pl-c">#</span> ...</span></pre></div>
-<p>You can also use the Docker image for running the toolkit, though this is not recommended for sub-commands other than <code>import</code> and <code>export</code>.</p>
+<p><em>NOTE:</em> Unsigned binaries built by GitHub Actions are provided for convenience and are available in <a href="https://github.com/cloudbees-oss/juxr/releases">Releases</a>.
+The recommended installation path is to build from source using <code>cargo install juxr</code>.</p>
 <h2>
 <a id="extract-reports-over-standard-io" class="anchor" href="#extract-reports-over-standard-io" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Extract reports over Standard I/O</h2>
 <blockquote>
