@@ -144,6 +144,7 @@ jobs:
       - name: Package binary distributions
         run: |
           Compress-Archive -LiteralPath target\release\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
