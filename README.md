@@ -15,6 +15,23 @@ cargo install juxr
 *NOTE:* Unsigned binaries built by GitHub Actions are provided for convenience and are available in [Releases](https://github.com/cloudbees-oss/juxr/releases).
 The recommended installation path is to build from source using `cargo install juxr`.
 
+To get the toolkit for use in Docker containers just copy it from the Docker image:
+
+```Dockerfile
+FROM docker.pkg.github.com/cloudbees-oss/juxr:latest AS juxr
+# Just to grab the juxr binary, then build your image as normal
+
+FROM your-base-image             
+# ...
+
+# Copy in the binary
+COPY --from=juxr /usr/local/bin/juxr /usr/local/bin/juxr
+
+# ...
+``` 
+
+You can also use the Docker image for running the toolkit, though this is not recommended for sub-commands other than `import` and `export`.
+
 ## Extract reports over Standard I/O
 
 > As a developer, I have some tests running in a temporary Kubernetes pod and I need to exract the test results and any associated [attachments](https://plugins.jenkins.io/junit-attachments/)
