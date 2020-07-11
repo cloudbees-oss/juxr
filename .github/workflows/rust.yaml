@@ -1,0 +1,108 @@
+name: Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  unix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+        rust: [stable]
+
+    steps:
+      - uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust }}
+      - uses: actions/checkout@v2
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Determine Target Env
+        run: |
+          eval $(rustc --print cfg | grep target_)
+          echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
+      - name: Backage binary distributions
+        run: |
+          tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/debug juxr
+      - name: Upload build distribution
+        uses: actions/upload-artifact@v1
+        with:
+          name: juxr-${{ env.target_triple }}.tar.gz
+          path: target/juxr-${{ env.target_triple }}.tar.gz
+  windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        rust: [stable]
+    steps:
+      - uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust }}
+      - uses: actions/checkout@v2
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build
+        run: |
+          cargo build --verbose
+          (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","::set-env name=BUILD_VERSION::"
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: juxr-x86_64-pc-windows-msvc
+          path: target/debug/juxr.exe
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Docker build
+        run: |
+          mkdir -p target
+          docker build --tag juxr:build --target build .
+          docker build --tag juxr:latest .
+          ID=$(docker run -d juxr:build cat)
+          docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
+          docker rm --force $ID
+          tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
+      - name: Upload build distribution
+        uses: actions/upload-artifact@v1
+        with:
+          name: juxr-x86_64-unknown-linux-musl.tar.gz
+          path: target/juxr-x86_64-unknown-linux-musl.tar.gz

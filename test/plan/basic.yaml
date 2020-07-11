@@ -1,0 +1,6 @@
+# execute a single command by passing to shell
+foo: echo truth
+# execute a single command as an array of arguments directly
+bar:
+  - echo
+  - truth

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="attachment" time="0.046" tests="0" errors="0" skipped="0" failures="0">
+  <testcase name="a test with output" classname="a class" time="0.046">
+    <system-out><![CDATA[some text
+[[ATTACHMENT|C:\foo\some\path]]
+more text
+[[ATTACHMENT|C:\foo\another\path]]
+even more text
+]]></system-out>
+    <system-err>[[ATTACHMENT|C:\foo\yet\another\path]]</system-err>
+  </testcase>
+</testsuite>

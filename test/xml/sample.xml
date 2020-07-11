@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="output" time="0.046" tests="0" errors="0" skipped="0" failures="0">
+  <!-- this is just a test with some output -->
+  <?ignore a processing instruction to ignore?>
+  <?empty?>
+  <testcase name="a test with output" classname="a class" time="0.046">
+    <system-out>some text</system-out>
+    <system-err>more text</system-err>
+  </testcase>
+  <a:bar xmlns:a="http://example.org/random" a:foo='manchu'>
+    <a:manchu />
+  </a:bar>
+</testsuite>

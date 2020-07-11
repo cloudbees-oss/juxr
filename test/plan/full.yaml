@@ -1,0 +1,19 @@
+# specify exit codes, short form
+foo:
+  # command execution using shell
+  cmd: echo truth
+  success: 0
+  failure: 1
+  skipped: 2
+# specify exit codes, long form
+bar:
+  # command execution direct
+  cmd:
+    - echo
+    - truth
+  success:
+    - 0
+  failure:
+    - 1
+  skipped:
+    - 2
