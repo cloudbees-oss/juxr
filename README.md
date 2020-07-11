@@ -32,7 +32,7 @@ As you will likely want to have the pod terminate with a success/failure exit co
 
 Have a look at the `juxr help export` and `juxr help exec` for details of the other export options such as secret redaction and renaming of tests / suites.
 
-If you do not want to use the `juxr` toolkit inside your test container you can achieve the same result with base64 encoding, however this will not provide for 
+If you do not want to use the `juxr` toolkit inside your test container you can achieve the same result with base64 encoding, however this will not provide for automatic exporting of JUnit attachments or the ability to prefix/suffix the test names or suite.
 
 ```bash
 needle="[[juxr::stream::$RANDOM::junit-test-report::TEST-custom.xml]]"
