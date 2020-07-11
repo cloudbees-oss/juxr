@@ -53,13 +53,10 @@ jobs:
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:
-          name: juxr-${{ env.target_triple }}.tar.gz
-          path: target/juxr-${{ env.target_triple }}.tar.gz
-      - name: Upload build distribution
-        uses: actions/upload-artifact@v1
-        with:
-          name: juxr-${{ env.target_triple }}.tar.gz.sha256
-          path: target/juxr-${{ env.target_triple }}.tar.gz.sha256
+          name: juxr-${{ env.target_triple }}.zip
+          path: |
+            target/juxr-${{ env.target_triple }}.tar.gz
+            target/juxr-${{ env.target_triple }}.tar.gz.sha256
   windows:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -104,13 +101,10 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
         with:
-          name: juxr-x86_64-pc-windows-msvc
-          path: target\juxr-${{ env.target_triple }}.zip
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: juxr-x86_64-pc-windows-msvc
-          path: target\juxr-${{ env.target_triple }}.zip.sha256
+          name: juxr-x86_64-pc-windows-msvc.zip
+          path: |
+            target\juxr-${{ env.target_triple }}.zip
+            target\juxr-${{ env.target_triple }}.zip.sha256
   docker:
     runs-on: ubuntu-latest
     steps:
@@ -129,10 +123,7 @@ jobs:
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:
-          name: juxr-x86_64-unknown-linux-musl.tar.gz
-          path: target/juxr-x86_64-unknown-linux-musl.tar.gz
-      - name: Upload build distribution
-        uses: actions/upload-artifact@v1
-        with:
-          name: juxr-x86_64-unknown-linux-musl.tar.gz.sha256
-          path: target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
+          name: juxr-x86_64-unknown-linux-musl.zip
+          path: |
+            target/juxr-x86_64-unknown-linux-musl.tar.gz
+            target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
