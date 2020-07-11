@@ -185,7 +185,7 @@ jobs:
           tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
           sha256sum target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's: *target/juxr-x86_64-unknown-linux-musl.tar.gz::' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
       - name: Docker push
-        uses: mr-smithers-excellent/docker-build-push@v2
+        uses: mr-smithers-excellent/docker-build-push@v3
         with:
           image: stephenc/juxr
           registry: docker.pkg.github.com
