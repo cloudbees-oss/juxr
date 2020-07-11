@@ -184,13 +184,13 @@ jobs:
           docker rm --force $ID
           tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
           sha256sum target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's: *target/juxr-x86_64-unknown-linux-musl.tar.gz::' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
-      #      - name: Docker push
-      #        uses: mr-smithers-excellent/docker-build-push@v2
-      #        with:
-      #          image: stephenc/juxr
-      #          registry: docker.io
-      #          username: ${{ secrets.DOCKER_USERNAME }}
-      #          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Docker push
+        uses: mr-smithers-excellent/docker-build-push@v2
+        with:
+          image: stephenc/juxr
+          registry: docker.pkg.github.com
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Pick up upload URL
         uses: actions/download-artifact@v1
         with:
