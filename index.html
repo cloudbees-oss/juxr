@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>JUnit Xml Reports toolkit by cloudbees-oss</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">JUnit Xml Reports toolkit</h1>
+      <h2 class="project-tagline">A command line tool for helping manage JUnit XML formatted reports.</h2>
+      <a href="https://github.com/cloudbees-oss/juxr" class="btn">View on GitHub</a>
+      <a href="https://github.com/cloudbees-oss/juxr/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/cloudbees-oss/juxr/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="junit-xml-reporting-toolkit" class="anchor" href="#junit-xml-reporting-toolkit" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JUnit XML Reporting Toolkit</h1>
+<p>A command line tool for helping manage JUnit XML formatted reports.</p>
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+<p>To get the toolkit locally just use <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">Cargo</a>:</p>
+<pre><code>cargo install juxr
+</code></pre>
+<p>To get the toolkit for use in Docker containers just copy it from the Docker image:</p>
+<div class="highlight highlight-source-dockerfile"><pre><span class="pl-k">FROM</span> juxr:latest AS juxr
+<span class="pl-c"><span class="pl-c">#</span> Just to grab the juxr binary, then build your image as normal</span>
+
+<span class="pl-k">FROM</span> your-base-image             
+<span class="pl-c"><span class="pl-c">#</span> ...</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Copy in the binary</span>
+<span class="pl-k">COPY</span> --from=juxr /usr/local/bin/juxr /usr/local/bin/juxr
+
+<span class="pl-c"><span class="pl-c">#</span> ...</span></pre></div>
+<p>You can also use the Docker image for running the toolkit, though this is not recommended for sub-commands other than <code>import</code> and <code>export</code>.</p>
+<h2>
+<a id="extract-reports-over-standard-io" class="anchor" href="#extract-reports-over-standard-io" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Extract reports over Standard I/O</h2>
+<blockquote>
+<p>As a developer, I have some tests running in a temporary Kubernetes pod and I need to exract the test results and any associated <a href="https://plugins.jenkins.io/junit-attachments/">attachments</a></p>
+</blockquote>
+<p>The toolkit provides three sub-commands to assist with this.</p>
+<p>Firstly there is the <code>export</code> subcommand. You run this command in your pod and it will pipe the reports (and any attachments) to standard out.</p>
+<p>Then there is the <code>import</code> subcommand. You run this command on the receiving end and pipe the Kubernetes logs through it.</p>
+<p>Finally, there is a specialized variant of <code>export</code> in the <code>exec</code> subcommand. You run this again in your pod mut use it to wrap the test launch command.</p>
+<p>You will want to include the toolkit in your test image, e.g.:</p>
+<p>If you are using the <code>export</code> you will change your entry point to run something like <code>juxr export -r  **/TEST-*.xml</code> or whatever the test report pattern you need.</p>
+<p>As you will likely want to have the pod terminate with a success/failure exit code, a simpler option is to just change the command that runs your tests from <code>some_command arg arg</code> to <code>juxr exec -r **/TEST-*.xml -- some_command arg arg</code> as this will take care of launching the command and propagating the error code after exporting the test reports.</p>
+<p>Have a look at the <code>juxr help export</code> and <code>juxr help exec</code> for details of the other export options such as secret redaction and renaming of tests / suites.</p>
+<p>If you do not want to use the <code>juxr</code> toolkit inside your test container you can achieve the same result with base64 encoding, however this will not provide for</p>
+<div class="highlight highlight-source-shell"><pre>needle=<span class="pl-s"><span class="pl-pds">"</span>[[juxr::stream::<span class="pl-smi">$RANDOM</span>::junit-test-report::TEST-custom.xml]]<span class="pl-pds">"</span></span>
+<span class="pl-c"><span class="pl-c">#</span> NOTE: there must be a new line before the needle</span>
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span> 
+<span class="pl-c1">echo</span> <span class="pl-smi">$needle</span>
+base64 <span class="pl-k">&lt;</span> TEST-custom.xml
+<span class="pl-c1">echo</span> <span class="pl-smi">$needle</span></pre></div>
+<p>Then on the receiving end you just pipe the logs through <code>juxr import</code>, e.g. if using <code>helm test</code> to run your test container:</p>
+<pre><code>helm test --logs | juxr import -o helm-test-results/
+</code></pre>
+<p>The import command will output all non-needle bookended content to standard out and write the files to the specified output directory</p>
+<h2>
+<a id="convert-tap-formatted-reports-to-junit-xml-format" class="anchor" href="#convert-tap-formatted-reports-to-junit-xml-format" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Convert TAP formatted reports to JUnit XML format</h2>
+<blockquote>
+<p>As a developer I have a testing tool that outputs TAP formatted test reports but I need to consume JUnit XML formatted reports</p>
+</blockquote>
+<p>The <code>tap</code> subcommand will convert TAP version 12 or 13 output into JUnit XML format.</p>
+<p>You can either pipe the output through or have the test command run by the toolkit, e.g.</p>
+<pre><code>some_command arg arg | juxr tap --name "some_command.tests" -o test-results/
+</code></pre>
+<p>or</p>
+<pre><code>juxr tap --name "some_command.tests" -o test-results/ -- some_command arg arg
+</code></pre>
+<p>The later form will attempt to infer test durations and will propagate the exit code</p>
+<h2>
+<a id="generate-a-junit-xml-report-from-executing-a-single-command" class="anchor" href="#generate-a-junit-xml-report-from-executing-a-single-command" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Generate a JUnit XML report from executing a single command</h2>
+<blockquote>
+<p>As a developer I have a single command which I would like to turn into a JUnit XML report</p>
+</blockquote>
+<p>The <code>test</code> sub command will run a single command and produce a JUnit XML report that includes the commands output, e.g.</p>
+<pre><code>juxr test --name "some.command" --test "arg1 arg2" -o test-results/ -- some_command arg1 arg2
+</code></pre>
+<p>This will produce a <code>TEST-some.command.xml</code> file in <code>test-results</code>.</p>
+<p>Look at <code>juxr help test</code> for details on how to control the exit code mapping to differentiate the test status.</p>
+<h2>
+<a id="generate-a-junit-xml-report-from-running-a-suite-of-simple-command" class="anchor" href="#generate-a-junit-xml-report-from-running-a-suite-of-simple-command" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Generate a JUnit XML report from running a suite of simple command</h2>
+<blockquote>
+<p>As a developer, I have a series of different commands which represent independent tests I would like to run and record.</p>
+</blockquote>
+<p>For this use case we recommend that you use something like the excellent <a href="https://github.com/bats-core/bats-core">bats</a> test framework.
+You can generate JUnit XML Foratted reports with this framework and you have control over the sequencing of tests.</p>
+<p>However, sometimes you just need something quick and dirty... enter the <code>run</code> subcommand.</p>
+<p>This takes a flexible YAML formatted description of a suite of tests and runs them in alphabetical order.
+An example suite of tests could look like:</p>
+<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">"001 echo greeting using the current shell"</span>: <span class="pl-s">&gt;</span>
+<span class="pl-s">  if [[ $(($(($RANDOM%10))%2)) -eq 1 ]] ;</span>
+<span class="pl-s">  then</span>
+<span class="pl-s">    echo hello world ;</span>
+<span class="pl-s">  else</span>
+<span class="pl-s">    echo hi world ;</span>
+<span class="pl-s">  fi</span>
+<span class="pl-s"></span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">002 echo a greeting using the echo binary</span><span class="pl-pds">"</span></span>:
+  - <span class="pl-s">echo</span>
+  - <span class="pl-s"><span class="pl-pds">"</span>hello world<span class="pl-pds">"</span></span>
+<span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">003 the false command when executed by the current shell should exit with non-zero</span><span class="pl-pds">"</span></span>:
+  <span class="pl-ent">cmd</span>: <span class="pl-s"><span class="pl-pds">"</span>false<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> need to quote values that YAML might perform type conversions on</span>
+  <span class="pl-ent">success</span>: <span class="pl-c1">1</span>
+  <span class="pl-ent">failure</span>: <span class="pl-c1">0</span>
+<span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">004 skip this test</span><span class="pl-pds">"</span></span>:
+  <span class="pl-ent">cmd</span>:
+    - <span class="pl-s"><span class="pl-pds">"</span>false<span class="pl-pds">"</span></span>
+  <span class="pl-ent">skipped</span>: <span class="pl-c1">1</span>
+  <span class="pl-ent">failure</span>: <span class="pl-c1">2</span> <span class="pl-c"><span class="pl-c">#</span> need to move it off it's default of 1</span>
+<span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">005 exit code 1 or 2 is success 3 or 4 means skip and 5 or 6 is failure otherwise an error</span><span class="pl-pds">"</span></span>:
+  <span class="pl-ent">cmd</span>:
+    - <span class="pl-s">sh</span>
+    - <span class="pl-s"><span class="pl-pds">"</span>-c<span class="pl-pds">"</span></span>
+    - <span class="pl-s"><span class="pl-pds">"</span>exit 2<span class="pl-pds">"</span></span>
+  <span class="pl-ent">success</span>:
+    - <span class="pl-c1">1</span>
+    - <span class="pl-c1">2</span>
+  <span class="pl-ent">skipped</span>:
+    - <span class="pl-c1">3</span>
+    - <span class="pl-c1">4</span>
+  <span class="pl-ent">failure</span>:
+    - <span class="pl-c1">5</span>
+    - <span class="pl-c1">6</span></pre></div>
+<p>The top level keys are the test names.</p>
+<ul>
+<li>
+<p>If the value of the key is a string then it will be executed using <code>sh -c</code> (or <code>cmd /C</code> on Windows)</p>
+</li>
+<li>
+<p>If the value of the key is an array of strings then the first value will be used as the program name and the remaining values will be passed as the program arguments</p>
+</li>
+<li>
+<p>If the value of the key is an object then the command will be taken from the <code>cmd</code> or <code>command</code> key in the object (which takes a string or an array of strings).</p>
+</li>
+<li>
+<p>The object form also permits specifying the expected exit codes for different test statuses</p>
+<ul>
+<li>
+<code>success</code> takes either a single value or an array of values indicating the exit code of the program to interpret as a successful test result. If not specified then it is assumed to have the value <code>0</code>.</li>
+<li>
+<code>failure</code> takes either a single value or an array of values indicating the exit code of the program to interpret as a failed test result. If not specified then it is assumed to have the value <code>1</code>.</li>
+<li>
+<code>skipped</code> takes either a single value or an array of values indicating the exit code of the program to interpret as a successful test result. If not specified then the test will never be skipped.</li>
+</ul>
+<p>Note: if you want to use exit code <code>1</code> or <code>0</code> for anything other than <code>failure</code> or <code>success</code> respectively then you will need to override the defaults</p>
+<p>Note: an exit code other than those defined for <code>success</code>, <code>failure</code> or <code>skipped</code> will mark the test result as an error.</p>
+</li>
+</ul>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/cloudbees-oss/juxr">JUnit Xml Reports toolkit</a> is maintained by <a href="https://github.com/cloudbees-oss">cloudbees-oss</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
