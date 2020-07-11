@@ -2,6 +2,8 @@
 
 A command line tool for helping manage JUnit XML formatted reports.
 
+![Release](https://github.com/cloudbees-oss/juxr/workflows/Release/badge.svg) ![Test](https://github.com/cloudbees-oss/juxr/workflows/Test/badge.svg) [![Crates.io](https://img.shields.io/crates/v/juxr.svg?maxAge=2592000)](https://crates.io/crates/juxr) [![Crates.io](https://img.shields.io/crates/d/juxr.svg?maxAge=2592000)](https://crates.io/crates/juxr) 
+
 ## Installation
 
 To get the toolkit locally just use [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html):
