@@ -1,7 +1,7 @@
 [package]
 name = "juxr"
 description = "JUnit XML Reports Toolkit"
-version = "0.1.1"
+version = "0.1.2-pre"
 authors = ["Stephen Connolly <stephen.alan.connolly@gmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -10,6 +10,13 @@ repository = "https://github.com/cloudbees-oss/juxr"
 readme = "README.md"
 keywords = ["cli","junit","tap"]
 categories = ["command-line-utilities"]
+
+[package.metadata.release]
+sign-commit = true
+sign-tag = true
+dev-version-ext = "pre"
+tag-name = "{{version}}"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
