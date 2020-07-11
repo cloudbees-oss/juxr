@@ -187,7 +187,7 @@ jobs:
       - name: Docker push
         uses: mr-smithers-excellent/docker-build-push@v3
         with:
-          image: stephenc/juxr
+          image: juxr/juxr
           tag: latest
           registry: docker.pkg.github.com
           username: ${{ github.actor }}
@@ -195,7 +195,7 @@ jobs:
       - name: Docker push
         uses: mr-smithers-excellent/docker-build-push@v3
         with:
-          image: cloudbees-oss/juxr
+          image: juxr/juxr
           registry: docker.pkg.github.com
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}

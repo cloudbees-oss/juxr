@@ -18,7 +18,7 @@ The recommended installation path is to build from source using `cargo install j
 To get the toolkit for use in Docker containers just copy it from the Docker image:
 
 ```Dockerfile
-FROM docker.pkg.github.com/cloudbees-oss/juxr:latest AS juxr
+FROM docker.pkg.github.com/cloudbees-oss/juxr/juxr:latest AS juxr
 # Just to grab the juxr binary, then build your image as normal
 
 FROM your-base-image             
