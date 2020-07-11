@@ -91,12 +91,17 @@ jobs:
       - name: Package binary distributions
         run: |
           Compress-Archive -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
-          $(CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256)[1] -replace " ",""
+          $(CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256)[1] -replace " ","" > target\juxr-${{ env.target_triple }}.zip.sha256
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
         with:
           name: juxr-x86_64-pc-windows-msvc
           path: target\juxr-${{ env.target_triple }}.zip
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: juxr-x86_64-pc-windows-msvc
+          path: target\juxr-${{ env.target_triple }}.zip.sha256
   docker:
     runs-on: ubuntu-latest
     steps:

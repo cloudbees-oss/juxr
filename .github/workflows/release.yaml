@@ -144,7 +144,7 @@ jobs:
       - name: Package binary distributions
         run: |
           Compress-Archive -LiteralPath target\release\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
-          CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256
+          $(CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256)[1] -replace " ","" > target\juxr-${{ env.target_triple }}.zip.sha256
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -154,6 +154,15 @@ jobs:
           asset_path: target/juxr-${{ env.target_triple }}.zip
           asset_name: juxr-${{ env.target_triple }}.zip
           asset_content_type: application/zip
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.release_upload_url }}
+          asset_path: target/juxr-${{ env.target_triple }}.zip.sha256
+          asset_name: juxr-${{ env.target_triple }}.zip.sha256
+          asset_content_type: text/plain
   docker:
     name: Publish Docker image
     runs-on: ubuntu-latest
