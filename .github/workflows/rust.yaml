@@ -45,7 +45,7 @@ jobs:
       - name: Backage binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/debug juxr
-          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's/ *target/juxr-${{ env.target_triple }}.tar.gz//' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
+          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:
@@ -91,7 +91,7 @@ jobs:
       - name: Package binary distributions
         run: |
           Compress-Archive -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
-          CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256
+          $(CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256)[1] -replace " ",""
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
         with:
@@ -111,7 +111,7 @@ jobs:
           docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
           docker rm --force $ID
           tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
-          sha256sum -b target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's/ *target/juxr-x86_64-unknown-linux-musl.tar.gz//' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
+          sha256sum -b target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's: *target/juxr-x86_64-unknown-linux-musl.tar.gz::' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:

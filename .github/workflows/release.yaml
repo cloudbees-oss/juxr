@@ -77,7 +77,7 @@ jobs:
       - name: Package binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/release juxr
-          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's/ *target/juxr-${{ env.target_triple }}.tar.gz//' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
+          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -170,7 +170,7 @@ jobs:
           docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
           docker rm --force $ID
           tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
-          sha256sum -b target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's/ *target/juxr-x86_64-unknown-linux-musl.tar.gz//' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
+          sha256sum -b target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's: *target/juxr-x86_64-unknown-linux-musl.tar.gz::' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
       #      - name: Docker push
       #        uses: mr-smithers-excellent/docker-build-push@v2
       #        with:

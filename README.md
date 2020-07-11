@@ -12,6 +12,9 @@ To get the toolkit locally just use [Cargo](https://doc.rust-lang.org/cargo/gett
 cargo install juxr
 ```              
 
+*NOTE:* Unsigned binaries built by GitHub Actions are provided for convenience and are available in [Releases](https://github.com/cloudbees-oss/juxr/releases).
+The recommended installation path is to build from source using `cargo install juxr`.
+
 ## Extract reports over Standard I/O
 
 > As a developer, I have some tests running in a temporary Kubernetes pod and I need to exract the test results and any associated [attachments](https://plugins.jenkins.io/junit-attachments/)
