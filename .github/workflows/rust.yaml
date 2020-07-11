@@ -45,11 +45,17 @@ jobs:
       - name: Backage binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/debug juxr
+          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's/ *target/juxr-${{ env.target_triple }}.tar.gz//' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:
           name: juxr-${{ env.target_triple }}.tar.gz
           path: target/juxr-${{ env.target_triple }}.tar.gz
+      - name: Upload build distribution
+        uses: actions/upload-artifact@v1
+        with:
+          name: juxr-${{ env.target_triple }}.tar.gz.sha256
+          path: target/juxr-${{ env.target_triple }}.tar.gz.sha256
   windows:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -82,11 +88,15 @@ jobs:
           (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","::set-env name=BUILD_VERSION::"
       - name: Run tests
         run: cargo test --verbose
+      - name: Package binary distributions
+        run: |
+          Compress-Archive -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
+          CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
         with:
           name: juxr-x86_64-pc-windows-msvc
-          path: target/debug/juxr.exe
+          path: target\juxr-${{ env.target_triple }}.zip
   docker:
     runs-on: ubuntu-latest
     steps:
@@ -101,8 +111,14 @@ jobs:
           docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
           docker rm --force $ID
           tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
+          sha256sum -b target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's/ *target/juxr-x86_64-unknown-linux-musl.tar.gz//' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:
           name: juxr-x86_64-unknown-linux-musl.tar.gz
           path: target/juxr-x86_64-unknown-linux-musl.tar.gz
+      - name: Upload build distribution
+        uses: actions/upload-artifact@v1
+        with:
+          name: juxr-x86_64-unknown-linux-musl.tar.gz.sha256
+          path: target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
