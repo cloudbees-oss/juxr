@@ -78,7 +78,7 @@ jobs:
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/release juxr
           if which sha256sum > /dev/null ; then
-            sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
+            sha256sum target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
           else
             shasum -a 256 target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
           fi
@@ -183,7 +183,7 @@ jobs:
           docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
           docker rm --force $ID
           tar -czf target/juxr-x86_64-unknown-linux-musl.tar.gz -C target juxr
-          sha256sum -b target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's: *target/juxr-x86_64-unknown-linux-musl.tar.gz::' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
+          sha256sum target/juxr-x86_64-unknown-linux-musl.tar.gz  | sed -e 's: *target/juxr-x86_64-unknown-linux-musl.tar.gz::' > target/juxr-x86_64-unknown-linux-musl.tar.gz.sha256
       #      - name: Docker push
       #        uses: mr-smithers-excellent/docker-build-push@v2
       #        with:
