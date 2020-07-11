@@ -45,7 +45,11 @@ jobs:
       - name: Backage binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/debug juxr
-          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
+          if which sha256sum > /dev/null ; then
+            sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
+          else
+            shasum -a 256 target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
+          fi
       - name: Upload build distribution
         uses: actions/upload-artifact@v1
         with:
@@ -88,6 +92,11 @@ jobs:
           (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","::set-env name=BUILD_VERSION::"
       - name: Run tests
         run: cargo test --verbose
+      - name: Prepare to upload artifacts
+        shell: bash
+        run: |
+          eval $(rustc --print cfg | grep target_)
+          echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
       - name: Package binary distributions
         run: |
           Compress-Archive -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}

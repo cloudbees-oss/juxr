@@ -77,7 +77,11 @@ jobs:
       - name: Package binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/release juxr
-          sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256
+          if which sha256sum > /dev/null ; then
+            sha256sum -b target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
+          else
+            shasum -a 256 target/juxr-${{ env.target_triple }}.tar.gz | sed -e 's: *target/juxr-${{ env.target_triple }}.tar.gz::' > target/juxr-${{ env.target_triple }}.tar.gz.sha256 ;
+          fi
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
