@@ -99,7 +99,7 @@ jobs:
           echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
       - name: Package binary distributions
         run: |
-          Compress-Archive -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
+          Compress-Archive -Force -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
           $(CertUtil -hashfile target\juxr-${{ env.target_triple }}.zip SHA256)[1] -replace " ","" > target\juxr-${{ env.target_triple }}.zip.sha256
       - name: Upload build artifact
         uses: actions/upload-artifact@v1
