@@ -114,12 +114,9 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - name: Prep for installer build
-        run: cargo install cargo-wix
       - name: Release
         run: |
           cargo build --verbose --release
-          cargo wix --no-build --nocapture
           (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","::set-env name=BUILD_VERSION::"
       - name: Run tests
         run: cargo test --verbose --release
@@ -144,17 +141,8 @@ jobs:
         with:
           upload_url: ${{ env.release_upload_url }}
           asset_path: target/juxr-${{ env.target_triple }}.zip
-          asset_name: juxr-${{ env.target_triple }}
+          asset_name: juxr-${{ env.target_triple }}.zip
           asset_content_type: application/zip
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.release_upload_url }}
-          asset_path: target/wix/juxr-${{ env.BUILD_VERSION }}-x86_64.msi
-          asset_name: juxr-${{ env.target_triple }}.msi
-          asset_content_type: application/x-msi
   docker:
     name: Publish Docker image
     runs-on: ubuntu-latest
