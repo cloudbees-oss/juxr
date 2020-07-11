@@ -203,7 +203,7 @@ dependencies = [
 
 [[package]]
 name = "juxr"
-version = "0.1.5-pre"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "base64",
