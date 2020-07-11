@@ -10,23 +10,6 @@ To get the toolkit locally just use [Cargo](https://doc.rust-lang.org/cargo/gett
 cargo install juxr
 ```              
 
-To get the toolkit for use in Docker containers just copy it from the Docker image:
-
-```Dockerfile
-FROM juxr:latest AS juxr
-# Just to grab the juxr binary, then build your image as normal
-
-FROM your-base-image             
-# ...
-
-# Copy in the binary
-COPY --from=juxr /usr/local/bin/juxr /usr/local/bin/juxr
-
-# ...
-``` 
-
-You can also use the Docker image for running the toolkit, though this is not recommended for sub-commands other than `import` and `export`.
-
 ## Extract reports over Standard I/O
 
 > As a developer, I have some tests running in a temporary Kubernetes pod and I need to exract the test results and any associated [attachments](https://plugins.jenkins.io/junit-attachments/)
