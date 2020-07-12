@@ -176,7 +176,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: release-artifacts-sha256
-          path: target/juxr-${{ env.target_triple }}.tar.gz.sha256
+          path: target/juxr-${{ env.target_triple }}.zip.sha256
   docker:
     name: Publish Docker image
     runs-on: ubuntu-latest
