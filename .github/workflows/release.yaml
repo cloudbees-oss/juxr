@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -44,7 +44,7 @@ jobs:
         with:
           rust-version: ${{ matrix.rust }}
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
       - name: Cache cargo registry
         uses: actions/cache@v1
         with:
@@ -183,7 +183,7 @@ jobs:
     needs: [prepare]
     steps:
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
       - name: Docker build
         run: |
           mkdir -p target
