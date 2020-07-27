@@ -18,7 +18,7 @@ The recommended installation path is to build from source using `cargo install j
 To get the toolkit for use in Docker containers just copy it from the Docker image:
 
 ```Dockerfile
-FROM docker.pkg.github.com/cloudbees-oss/juxr/juxr:latest AS juxr
+FROM cloudbees-oss/juxr:latest AS juxr
 # Just to grab the juxr binary, then build your image as normal
 
 FROM your-base-image             
@@ -31,6 +31,12 @@ COPY --from=juxr /usr/local/bin/juxr /usr/local/bin/juxr
 ``` 
 
 You can also use the Docker image for running the toolkit, though this is not recommended for sub-commands other than `import` and `export`.
+
+### Docker image versioning
+
+* Each release gets a specific tag, as built by GitHub Actions
+* The `latest` tag always points to the latest release, as built by GitHub Actions
+* the `pre-release` tag always points to the [current mainline code](https://github.com/cloudbees-oss/juxr/tree/master), as built by DockerHub
 
 ## Extract reports over Standard I/O
 

@@ -209,6 +209,21 @@ jobs:
           registry: docker.pkg.github.com
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker push
+        uses: mr-smithers-excellent/docker-build-push@v3
+        with:
+          image: cloudbees/juxr
+          tag: latest
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Docker push
+        uses: mr-smithers-excellent/docker-build-push@v3
+        with:
+          image: cloudbees/juxr
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Pick up upload URL
         uses: actions/download-artifact@v1
         with:
