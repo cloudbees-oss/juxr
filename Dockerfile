@@ -1,4 +1,4 @@
-FROM ekidd/rust-musl-builder:1.44.0 AS build
+FROM ekidd/rust-musl-builder:1.48.0 AS build
 
 ADD --chown=rust:rust . ./
 
