@@ -17,11 +17,11 @@ extern crate log;
 
 use std::cell::RefCell;
 use std::fs::File;
-use std::io::{copy, stdin, stdout, BufReader, BufWriter, Write};
+use std::io::{copy, stderr, stdin, stdout, BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str::FromStr;
-use std::{env, fs, process};
+use std::{env, fs, process, thread};
 
 use base64::read::DecoderReader;
 use base64::write::EncoderWriter;
@@ -276,7 +276,8 @@ fn exec(args: &ArgMatches) -> i32 {
         let _ = child.args(&command[1..]);
     };
     debug!("Forking {:?}", command);
-    let mut child = match child.spawn() {
+    // need to pipe output so that we can flush line by line
+    let mut child = match child.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn() {
         Err(e) => {
             error!(
                 "The `{}` command failed to start: {:?}",
@@ -287,13 +288,47 @@ fn exec(args: &ArgMatches) -> i32 {
         }
         Ok(child) => child,
     };
-    let status = match child.wait() {
+    let mut child_stdout = BufReader::new(child.stdout.take().unwrap());
+    let out_piper = thread::spawn(move || {
+        let out = stdout();
+        let mut buf = vec![];
+        while let Ok(count) = child_stdout.read_until(b'\n', &mut buf) {
+            if count > 0 {
+                let mut lock = out.lock();
+                lock.write(&buf[0..count]).unwrap_or_default();
+                buf.clear();
+                lock.flush().unwrap_or_default();
+            } else {
+                break;
+            }
+        }
+    });
+    let mut child_stderr = BufReader::new(child.stderr.take().unwrap());
+    let err_piper = thread::spawn(move || {
+        let out = stderr();
+        let mut buf = vec![];
+        while let Ok(count) = child_stderr.read_until(b'\n', &mut buf) {
+            if count > 0 {
+                let mut lock = out.lock();
+                lock.write(&buf[0..count]).unwrap_or_default();
+                buf.clear();
+                lock.flush().unwrap_or_default();
+            } else {
+                break;
+            }
+        }
+    });
+    let status = match child.wait_with_output() {
         Err(e) => {
             error!("The `{}`command didn't start: {:?}", command.join(" "), e);
             return 11;
         }
         Ok(status) => status,
     };
+    // ensure all output has been flushed to stdout/stderr
+    out_piper.join().unwrap_or_default();
+    err_piper.join().unwrap_or_default();
+    // now we should be safe to output our own
     let out = stdout();
     let mut lock = out.lock();
     debug!("{:?} finished with status {:?}", command, status);
@@ -304,7 +339,7 @@ fn exec(args: &ArgMatches) -> i32 {
     if args.is_present("ignore_failures") {
         0
     } else {
-        status.code().unwrap_or_default()
+        status.status.code().unwrap_or_default()
     }
 }
 
@@ -325,11 +360,7 @@ fn import(args: &ArgMatches) -> i32 {
         let name = stream.name();
         let kind = stream.kind().unwrap_or_default();
 
-        let file_name = dir.join(Path::new(if name.starts_with('/') {
-            &name[1..]
-        } else {
-            &name
-        }));
+        let file_name = dir.join(Path::new(&name.strip_prefix('/').unwrap_or(&name)));
         debug!("Decoding {}", file_name.to_string_lossy());
         if let Some(parent) = file_name.parent() {
             if let Err(e) = fs::create_dir_all(parent) {
@@ -738,13 +769,21 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                             .to_string();
                     out.write_all(needle.as_bytes())?;
                     let mut reader = BufReader::new(File::open(file).unwrap());
-                    {
+                    let result = {
                         let mut writer = BufWriter::new(&mut out);
                         let mut encoder = EncoderWriter::new(&mut writer, base64::STANDARD);
-                        processor.process(&mut reader, &mut encoder)?;
-                        encoder.finish()?
-                    }
+                        let result = processor.process(&mut reader, &mut encoder);
+                        encoder.finish()?;
+                        result
+                    };
                     out.write_all(needle.as_bytes())?;
+                    if let Err(e) = result {
+                        error!(
+                            "Could not complete parsing report {}: {:?}",
+                            report.path().to_string_lossy(),
+                            e
+                        );
+                    }
                 }
                 for attachment in processor.attachments() {
                     if let Ok(file) = File::open(attachment) {
