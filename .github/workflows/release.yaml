@@ -187,8 +187,8 @@ jobs:
       - name: Docker build
         run: |
           mkdir -p target
-          docker build --tag juxr:build --target build .
-          docker build --tag juxr:latest .
+          docker build --build-arg VCS_REF=$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") --build-arg VERSION=$(sed -ne '/version/{ s/^version *= *"//; s/"$//; p; q; }' Cargo.toml) --tag juxr:build --target build .
+          docker build --build-arg VCS_REF=$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") --build-arg VERSION=$(sed -ne '/version/{ s/^version *= *"//; s/"$//; p; q; }' Cargo.toml) --tag juxr:latest .
           ID=$(docker run -d juxr:build cat)
           docker cp $ID:/home/rust/.cargo/bin/juxr ./target/
           docker rm --force $ID
