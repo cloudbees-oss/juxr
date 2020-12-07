@@ -18,7 +18,7 @@ const NEEDLE_START: &[u8] = b"\n[[juxr::stream::";
 const NEEDLE_METADATA: &[u8] = b"::";
 /// marker suffic for an embedded stream
 const NEEDLE_END: &[u8] = b"]]\n";
-/// the masimum valid length of an embedded stream marker
+/// the maximum valid length of an embedded stream marker
 const NEEDLE_MAX_LEN: usize = 8192;
 
 mod import;
