@@ -24,7 +24,7 @@ jobs:
           prerelease: false
       - name: Record upload URL
         run: |
-          echo "::set-env name==release_upload_url::${{ steps.create_release.outputs.upload_url }}" > release-upload-url.txt
+          echo "release_upload_url=${{ steps.create_release.outputs.upload_url }}" > release-upload-url.txt
       - name: Share upload URL
         uses: actions/upload-artifact@v1
         with:
@@ -70,10 +70,10 @@ jobs:
           name: release-upload-url
       - name: Prepare to upload artifacts
         run: |
-          cat release-upload-url/release-upload-url.txt
+          cat release-upload-url/release-upload-url.txt >> $GITHUB_ENV
           rm -rf release-upload-url/
           eval $(rustc --print cfg | grep target_)
-          echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
+          echo "target_triple=${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}" >> $GITHUB_ENV
       - name: Package binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/release juxr
@@ -136,7 +136,7 @@ jobs:
       - name: Release
         run: |
           cargo build --verbose --release
-          (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","::set-env name=BUILD_VERSION::"
+          (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","BUILD_VERSION=" >> $GITHUB_ENV
       - name: Run tests
         run: cargo test --verbose --release
       - name: Pick up upload URL
@@ -146,10 +146,10 @@ jobs:
       - name: Prepare to upload artifacts
         shell: bash
         run: |
-          cat release-upload-url/release-upload-url.txt
+          cat release-upload-url/release-upload-url.txt >> $GITHUB_ENV
           rm -rf release-upload-url/
           eval $(rustc --print cfg | grep target_)
-          echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
+          echo "target_triple=${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}" >> $GITHUB_ENV
       - name: Package binary distributions
         run: |
           Compress-Archive -LiteralPath target\release\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
@@ -231,7 +231,7 @@ jobs:
       - name: Prepare to upload artifacts
         shell: bash
         run: |
-          cat release-upload-url/release-upload-url.txt
+          cat release-upload-url/release-upload-url.txt >> $GITHUB_ENV
           rm -rf release-upload-url/
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1

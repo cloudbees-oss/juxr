@@ -41,7 +41,7 @@ jobs:
       - name: Determine Target Env
         run: |
           eval $(rustc --print cfg | grep target_)
-          echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
+          echo "target_triple=${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}" >> $GITHUB_ENV
       - name: Backage binary distributions
         run: |
           tar -czf target/juxr-${{ env.target_triple }}.tar.gz -C target/debug juxr
@@ -89,14 +89,14 @@ jobs:
       - name: Build
         run: |
           cargo build --verbose
-          (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","::set-env name=BUILD_VERSION::"
+          (cargo pkgid) -replace "^.*#","" -replace "([^0-9.].*)?$","" -replace "^","BUILD_VERSION=" >> $GITHUB_ENV
       - name: Run tests
         run: cargo test --verbose
       - name: Prepare to upload artifacts
         shell: bash
         run: |
           eval $(rustc --print cfg | grep target_)
-          echo "::set-env name=target_triple::${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}"
+          echo "target_triple=${target_arch:-unknown}-${target_vendor:-unknown}-${target_os:-unknown}${target_env:+-}${target_env:-}" >> $GITHUB_ENV
       - name: Package binary distributions
         run: |
           Compress-Archive -Force -LiteralPath target\debug\juxr.exe -DestinationPath target\juxr-${{ env.target_triple }}
