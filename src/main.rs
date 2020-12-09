@@ -263,6 +263,7 @@ fn test(args: &ArgMatches) -> i32 {
 }
 
 fn exec(args: &ArgMatches) -> i32 {
+    let redirect_err_to_out = args.is_present("redirect_err_to_out");
     let command = args
         .values_of("command")
         .expect("A command to execute has been supplied");
@@ -305,16 +306,31 @@ fn exec(args: &ArgMatches) -> i32 {
     });
     let mut child_stderr = BufReader::new(child.stderr.take().unwrap());
     let err_piper = thread::spawn(move || {
-        let out = stderr();
-        let mut buf = vec![];
-        while let Ok(count) = child_stderr.read_until(b'\n', &mut buf) {
-            if count > 0 {
-                let mut lock = out.lock();
-                lock.write(&buf[0..count]).unwrap_or_default();
-                buf.clear();
-                lock.flush().unwrap_or_default();
-            } else {
-                break;
+        if redirect_err_to_out {
+            let out = stdout();
+            let mut buf = vec![];
+            while let Ok(count) = child_stderr.read_until(b'\n', &mut buf) {
+                if count > 0 {
+                    let mut lock = out.lock();
+                    lock.write(&buf[0..count]).unwrap_or_default();
+                    buf.clear();
+                    lock.flush().unwrap_or_default();
+                } else {
+                    break;
+                }
+            }
+        } else {
+            let out = stderr();
+            let mut buf = vec![];
+            while let Ok(count) = child_stderr.read_until(b'\n', &mut buf) {
+                if count > 0 {
+                    let mut lock = out.lock();
+                    lock.write(&buf[0..count]).unwrap_or_default();
+                    buf.clear();
+                    lock.flush().unwrap_or_default();
+                } else {
+                    break;
+                }
             }
         }
     });
@@ -557,6 +573,12 @@ impl LocalizedArgs {
             )
             .subcommand(
                 self.add_export_args(SubCommand::with_name("exec"))
+                    .arg(
+                        Arg::with_name("redirect_err_to_out")
+                            .long("redirect-err-to-out")
+                            .takes_value(false)
+                            .help("Redirects the child processes STDERR to STDOUT, useful in cases where buffering is corrupting JUXR's export")
+                    )
                     .about("Runs a command that generates JUnit XML Reports and exports them (and any referenced attachments) to STDOUT before propagating the invoked command's exit code")
                     .arg(
                         Arg::with_name("command")
