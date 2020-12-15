@@ -434,6 +434,7 @@ struct LocalizedArgs {
     test_case_class_prefix: String,
     test_case_class_suffix: String,
     skip_export: String,
+    pad_export: String,
 }
 
 impl LocalizedArgs {
@@ -452,6 +453,7 @@ impl LocalizedArgs {
             test_case_class_prefix: format!("{}_CLASS_PREFIX", prefix),
             test_case_class_suffix: format!("{}_CLASS_SUFFIX", prefix),
             skip_export: format!("{}_SKIP_EXPORT", prefix),
+            pad_export: format!("{}_PAD_EXPORT", prefix),
         }
     }
 
@@ -539,6 +541,14 @@ impl LocalizedArgs {
                     .env(&self.skip_export)
                     .default_value("false")
                     .help("Set to `true` to skip exporting, for use in scripts / containers where you do not always want to export reports")
+            )
+            .arg(
+                Arg::with_name("pad_export")
+                    .long("pad-export")
+                    .env(&self.pad_export)
+                    .takes_value(true)
+                    .default_value("0")
+                    .help("Number of newlines to bookend the exporting with")
             )
     }
 
@@ -770,6 +780,15 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
             _ => (),
         }
     }
+    let padding = if let Some(padding) = args.value_of_lossy("pad_export") {
+        padding.parse::<i32>().unwrap_or(0)
+    } else {
+        0
+    };
+    for _ in 0..padding {
+        writeln!(out)?;
+    }
+    out.flush()?;
     let processor = report_processor(args);
     for report_glob in args.values_of("reports").unwrap_or_default() {
         for report in globwalk::glob(report_glob).unwrap() {
@@ -789,6 +808,7 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                     let needle =
                         Needle::new_with_kind(&file.to_string_lossy(), "junit-test-report")
                             .to_string();
+                    out.flush()?;
                     out.write_all(needle.as_bytes())?;
                     let mut reader = BufReader::new(File::open(file).unwrap());
                     let result = {
@@ -799,6 +819,10 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                         result
                     };
                     out.write_all(needle.as_bytes())?;
+                    if padding > 0 {
+                        writeln!(out)?;
+                        out.flush()?;
+                    }
                     if let Err(e) = result {
                         error!(
                             "Could not complete parsing report {}: {:?}",
@@ -810,6 +834,7 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                 for attachment in processor.attachments() {
                     if let Ok(file) = File::open(attachment) {
                         let needle = Needle::new(&attachment).to_string();
+                        out.flush()?;
                         out.write_all(needle.as_bytes())?;
                         let mut reader = BufReader::new(file);
                         {
@@ -817,6 +842,10 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                             copy(&mut reader, &mut writer)?;
                         }
                         out.write_all(needle.as_bytes())?;
+                        if padding > 0 {
+                            writeln!(out)?;
+                            out.flush()?;
+                        }
                     }
                 }
             }
@@ -838,6 +867,7 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                 debug!("Exporting file: {}", file_name);
                 if let Ok(file) = File::open(path.clone()) {
                     let needle = Needle::new(&file_name).to_string();
+                    out.flush()?;
                     out.write_all(needle.as_bytes())?;
                     let mut reader = BufReader::new(file);
                     {
@@ -845,9 +875,17 @@ fn export_reports<W: Write>(args: &ArgMatches, mut out: &mut W) -> anyhow::Resul
                         copy(&mut reader, &mut writer)?;
                     }
                     out.write_all(needle.as_bytes())?;
+                    if padding > 0 {
+                        writeln!(out)?;
+                        out.flush()?;
+                    }
                 }
             }
         }
     }
+    for _ in 0..padding {
+        writeln!(out)?;
+    }
+    out.flush()?;
     Ok(())
 }
